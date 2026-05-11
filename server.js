@@ -105,12 +105,8 @@ Rules:
   try {
     let messageContent;
     if (imageUrl) {
-      const imgRes = await fetch(imageUrl);
-      const imgBuffer = await imgRes.buffer();
-      const base64 = imgBuffer.toString('base64');
-      const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
       messageContent = [
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+        { type: 'image', source: { type: 'url', url: imageUrl } },
         { type: 'text', text: `Product title: ${title}\nAnalyze the image carefully and fill in each field accurately.` }
       ];
     } else {
@@ -144,7 +140,6 @@ app.post('/api/save', async (req, res) => {
   if (!accessToken) return res.status(401).json({ error: 'Not authenticated' });
   const { productId, description } = req.body;
 
-  // Convert spec format to clean HTML
   const html = description.split('\n')
     .filter(line => line.trim())
     .map(line => `<p><strong>${line.split(':')[0]}:</strong>${line.split(':').slice(1).join(':')}</p>`)
