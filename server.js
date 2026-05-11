@@ -67,7 +67,7 @@ app.get('/api/products', async (req, res) => {
   if (!accessToken) return res.status(401).json({ error: 'Not authenticated' });
   try {
     const response = await fetch(
-      `https://${SHOPIFY_STORE}/admin/api/2024-01/products.json?limit=50&fields=id,title,images,body_html&status=any',
+      `https://${SHOPIFY_STORE}/admin/api/2024-01/products.json?limit=50&fields=id,title,images,body_html&status=any`,
       { headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' } }
     );
     const data = await response.json();
