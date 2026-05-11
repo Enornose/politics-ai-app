@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
-const crypto = require('crypto');
+const crypto = require('crypto');`https://${SHOPIFY_STORE}/admin/api/2024-01/products.json?limit=250&fields=id,title,images,body_html&status=any&order=created_at+desc`
 const fs = require('fs');
 require('dotenv').config();
 
