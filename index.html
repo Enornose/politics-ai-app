@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Politics Jeans — AI Description Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f6f6f7; color: #1a1a1a; min-height: 100vh; }
+    header { background: #0a0a0a; color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 14px; }
+    header h1 { font-size: 17px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+    .badge { background: #222; font-size: 11px; padding: 3px 10px; border-radius: 999px; color: #aaa; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .toolbar h2 { font-size: 20px; font-weight: 600; }
+    .btn-refresh { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 9px 18px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .btn-refresh:hover { background: #f0f0f0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px 20px; }
+    .stat-card .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+    .product-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s; }
+    .product-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .product-card img { width: 100%; height: 200px; object-fit: cover; background: #f0f0f0; display: block; }
+    .no-img { width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px; }
+    .card-body { padding: 16px; }
+    .card-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; }
+    .status-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; font-weight: 500; }
+    .has-desc { background: #e3f9e5; color: #1a7f37; }
+    .no-desc { background: #fff3cd; color: #856404; }
+    .btn-generate { width: 100%; background: #0a0a0a; color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-generate:hover { background: #333; }
+    .btn-generate:disabled { background: #999; cursor: not-allowed; }
+    .skeleton { background: #e5e5e5; border-radius: 14px; height: 340px; animation: pulse 1.5s ease-in-out infinite; }
+    .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .empty { text-align: center; padding: 60px 20px; color: #888; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; line-height: 1; padding: 0 4px; }
+    .modal-body { padding: 16px 24px 24px; }
+    .modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 10px; margin-bottom: 16px; background: #f0f0f0; display: block; }
+    .desc-box { background: #f6f6f7; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 2; white-space: pre-wrap; min-height: 160px; margin-bottom: 16px; color: #222; border: 1px solid #e5e5e5; font-family: 'SF Mono', 'Monaco', monospace; }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-save { flex: 1; background: #0a0a0a; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-save:hover { background: #333; }
+    .btn-save:disabled { background: #999; cursor: not-allowed; }
+    .btn-save.success { background: #1a7f37; }
+    .btn-cancel { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 20px; font-size: 14px; cursor: pointer; }
+    .btn-cancel:hover { background: #f0f0f0; }
+    .generating-msg { color: #888; font-style: italic; font-family: inherit; }
+    .error-msg { color: #c0392b; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Politics Jeans</h1>
+  <span class="badge">AI Description Generator</span>
+</header>
+
+<div class="container">
+  <div class="toolbar">
+    <h2>Your Products</h2>
+    <button class="btn-refresh" onclick="loadProducts()">↻ Refresh</button>
+  </div>
+  <div class="stats">
+    <div class="stat-card"><div class="label">Total products</div><div class="value" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="label">Have descriptions</div><div class="value" id="stat-with">—</div></div>
+    <div class="stat-card"><div class="label">Need descriptions</div><div class="value" id="stat-without">—</div></div>
+  </div>
+  <div id="products-area">
+    <div class="loading-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title"></h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <img id="modal-img" class="modal-img" src="" alt="" />
+      <div class="desc-box generating-msg" id="desc-box">Generating description... please wait</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" id="btn-save" onclick="saveDescription()" disabled>Save to Shopify</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let products = [];
+  let activeProductId = null;
+
+  async function loadProducts() {
+    document.getElementById('products-area').innerHTML = '<div class="loading-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+    try {
+      const res = await fetch('/api/products');
+      if (res.status === 401) { window.location.href = '/auth'; return; }
+      products = await res.json();
+      renderProducts();
+    } catch (e) {
+      document.getElementById('products-area').innerHTML = '<div class="empty"><h3>Could not load products</h3></div>';
+    }
+  }
+
+  function renderProducts() {
+    const withDesc = products.filter(p => p.body_html && p.body_html.length > 20).length;
+    document.getElementById('stat-total').textContent = products.length;
+    document.getElementById('stat-with').textContent = withDesc;
+    document.getElementById('stat-without').textContent = products.length - withDesc;
+    if (!products.length) { document.getElementById('products-area').innerHTML = '<div class="empty"><h3>No products found</h3></div>'; return; }
+    const html = products.map(p => {
+      const img = p.images && p.images[0] ? p.images[0].src : null;
+      const hasDesc = p.body_html && p.body_html.length > 20;
+      return `<div class="product-card">
+        ${img ? `<img src="${img}" alt="${p.title}" loading="lazy"/>` : '<div class="no-img">No image</div>'}
+        <div class="card-body">
+          <h3>${p.title}</h3>
+          <span class="status-badge ${hasDesc ? 'has-desc' : 'no-desc'}">${hasDesc ? '✓ Has description' : '⚠ Needs description'}</span>
+          <button class="btn-generate" onclick="openModal(${p.id})">${hasDesc ? 'Regenerate' : 'Generate description'}</button>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('products-area').innerHTML = '<div class="products-grid">' + html + '</div>';
+  }
+
+  async function openModal(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    activeProductId = productId;
+
+    document.getElementById('modal-title').textContent = product.title;
+    const imgUrl = product.images && product.images[0] ? product.images[0].src : null;
+    const imgEl = document.getElementById('modal-img');
+    imgEl.src = imgUrl || '';
+    imgEl.style.display = imgUrl ? 'block' : 'none';
+
+    const descBox = document.getElementById('desc-box');
+    descBox.className = 'desc-box generating-msg';
+    descBox.textContent = 'Generating description... please wait';
+
+    const saveBtn = document.getElementById('btn-save');
+    saveBtn.textContent = 'Save to Shopify';
+    saveBtn.className = 'btn-save';
+    saveBtn.disabled = true;
+
+    document.getElementById('overlay').classList.add('open');
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: product.title, imageUrl: imgUrl })
+      });
+      const data = await res.json();
+      if (data.error) {
+        descBox.className = 'desc-box error-msg';
+        descBox.textContent = 'Error: ' + data.error;
+      } else {
+        descBox.className = 'desc-box';
+        descBox.textContent = data.description;
+        saveBtn.disabled = false;
+      }
+    } catch (e) {
+      descBox.className = 'desc-box error-msg';
+      descBox.textContent = 'Network error. Try again.';
+    }
+  }
+
+  async function saveDescription() {
+    if (!activeProductId) return;
+    const descBox = document.getElementById('desc-box');
+    const description = descBox.textContent;
+    if (!description || descBox.classList.contains('generating-msg') || descBox.classList.contains('error-msg')) return;
+
+    const saveBtn = document.getElementById('btn-save');
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: activeProductId, description })
+      });
+      const data = await res.json();
+      if (data.success) {
+        saveBtn.textContent = '✓ Saved!';
+        saveBtn.className = 'btn-save success';
+        setTimeout(() => { closeModal(); loadProducts(); }, 1200);
+      } else {
+        alert('Save failed: ' + (data.error || 'Unknown error'));
+        saveBtn.textContent = 'Save to Shopify';
+        saveBtn.disabled = false;
+      }
+    } catch (e) {
+      alert('Network error. Try again.');
+      saveBtn.textContent = 'Save to Shopify';
+      saveBtn.disabled = false;
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    activeProductId = null;
+    document.getElementById('desc-box').textContent = '';
+    document.getElementById('modal-img').src = '';
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>
