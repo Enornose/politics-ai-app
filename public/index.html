@@ -25,35 +25,33 @@
     .product-card img { width: 100%; height: 200px; object-fit: cover; background: #f0f0f0; display: block; }
     .no-img { width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 13px; }
     .card-body { padding: 16px; }
-    .card-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; }
-    .status-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; font-weight: 500; }
-    .has-desc { background: #e3f9e5; color: #1a7f37; }
-    .no-desc { background: #fff3cd; color: #856404; }
+    .card-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; line-height: 1.4; }
     .btn-generate { width: 100%; background: #0a0a0a; color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .btn-generate:hover { background: #333; }
     .btn-generate:disabled { background: #999; cursor: not-allowed; }
-    .skeleton { background: #e5e5e5; border-radius: 14px; height: 340px; animation: pulse 1.5s ease-in-out infinite; }
+    .skeleton { background: #e5e5e5; border-radius: 14px; height: 320px; animation: pulse 1.5s ease-in-out infinite; }
     .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
     .empty { text-align: center; padding: 60px 20px; color: #888; }
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+    .empty h3 { font-size: 20px; margin-bottom: 8px; color: #333; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
     .overlay.open { display: flex; }
     .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; }
     .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
-    .modal-header h3 { font-size: 16px; font-weight: 600; }
-    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; line-height: 1; padding: 0 4px; }
+    .modal-header h3 { font-size: 15px; font-weight: 600; line-height: 1.4; padding-right: 12px; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; line-height: 1; flex-shrink: 0; }
     .modal-body { padding: 16px 24px 24px; }
     .modal-img { width: 100%; height: 220px; object-fit: cover; border-radius: 10px; margin-bottom: 16px; background: #f0f0f0; display: block; }
-    .desc-box { background: #f6f6f7; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 2; white-space: pre-wrap; min-height: 160px; margin-bottom: 16px; color: #222; border: 1px solid #e5e5e5; font-family: 'SF Mono', 'Monaco', monospace; }
+    .desc-box { background: #f6f6f7; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 2; white-space: pre-wrap; min-height: 160px; margin-bottom: 16px; color: #222; border: 1px solid #e5e5e5; font-family: 'SF Mono', 'Monaco', 'Menlo', monospace; }
+    .desc-box.generating { color: #999; font-style: italic; font-family: inherit; }
+    .desc-box.error { color: #c0392b; font-family: inherit; }
     .modal-actions { display: flex; gap: 10px; }
-    .btn-save { flex: 1; background: #0a0a0a; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .btn-save:hover { background: #333; }
-    .btn-save:disabled { background: #999; cursor: not-allowed; }
+    .btn-save { flex: 1; background: #0a0a0a; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-save:hover:not(:disabled) { background: #333; }
+    .btn-save:disabled { background: #bbb; cursor: not-allowed; }
     .btn-save.success { background: #1a7f37; }
     .btn-cancel { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 20px; font-size: 14px; cursor: pointer; }
     .btn-cancel:hover { background: #f0f0f0; }
-    .generating-msg { color: #888; font-style: italic; font-family: inherit; }
-    .error-msg { color: #c0392b; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -65,7 +63,7 @@
 
 <div class="container">
   <div class="toolbar">
-    <h2>Your Products</h2>
+    <h2>Needs Descriptions</h2>
     <button class="btn-refresh" onclick="loadProducts()">↻ Refresh</button>
   </div>
   <div class="stats">
@@ -74,7 +72,11 @@
     <div class="stat-card"><div class="label">Need descriptions</div><div class="value" id="stat-without">—</div></div>
   </div>
   <div id="products-area">
-    <div class="loading-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    <div class="loading-grid">
+      <div class="skeleton"></div><div class="skeleton"></div>
+      <div class="skeleton"></div><div class="skeleton"></div>
+      <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
   </div>
 </div>
 
@@ -86,7 +88,7 @@
     </div>
     <div class="modal-body">
       <img id="modal-img" class="modal-img" src="" alt="" />
-      <div class="desc-box generating-msg" id="desc-box">Generating description... please wait</div>
+      <div class="desc-box generating" id="desc-box">Generating description... please wait</div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">Cancel</button>
         <button class="btn-save" id="btn-save" onclick="saveDescription()" disabled>Save to Shopify</button>
@@ -107,7 +109,7 @@
       products = await res.json();
       renderProducts();
     } catch (e) {
-      document.getElementById('products-area').innerHTML = '<div class="empty"><h3>Could not load products</h3></div>';
+      document.getElementById('products-area').innerHTML = '<div class="empty"><h3>Could not load products</h3><p>Check your server credentials.</p></div>';
     }
   }
 
@@ -116,19 +118,29 @@
     document.getElementById('stat-total').textContent = products.length;
     document.getElementById('stat-with').textContent = withDesc;
     document.getElementById('stat-without').textContent = products.length - withDesc;
-    if (!products.length) { document.getElementById('products-area').innerHTML = '<div class="empty"><h3>No products found</h3></div>'; return; }
-    const html = products.map(p => {
+
+    // Only show products WITHOUT descriptions, sorted newest first (highest ID = newest)
+    const noDesc = products
+      .filter(p => !p.body_html || p.body_html.length <= 20)
+      .sort((a, b) => b.id - a.id);
+
+    if (!noDesc.length) {
+      document.getElementById('products-area').innerHTML = '<div class="empty"><h3>🎉 All products have descriptions!</h3><p>Hit refresh to check for new products.</p></div>';
+      return;
+    }
+
+    const html = noDesc.map(p => {
       const img = p.images && p.images[0] ? p.images[0].src : null;
-      const hasDesc = p.body_html && p.body_html.length > 20;
-      return `<div class="product-card">
-        ${img ? `<img src="${img}" alt="${p.title}" loading="lazy"/>` : '<div class="no-img">No image</div>'}
-        <div class="card-body">
-          <h3>${p.title}</h3>
-          <span class="status-badge ${hasDesc ? 'has-desc' : 'no-desc'}">${hasDesc ? '✓ Has description' : '⚠ Needs description'}</span>
-          <button class="btn-generate" onclick="openModal(${p.id})">${hasDesc ? 'Regenerate' : 'Generate description'}</button>
-        </div>
-      </div>`;
+      return `
+        <div class="product-card">
+          ${img ? `<img src="${img}" alt="${p.title}" loading="lazy"/>` : '<div class="no-img">No image</div>'}
+          <div class="card-body">
+            <h3>${p.title}</h3>
+            <button class="btn-generate" onclick="openModal(${p.id})">Generate description</button>
+          </div>
+        </div>`;
     }).join('');
+
     document.getElementById('products-area').innerHTML = '<div class="products-grid">' + html + '</div>';
   }
 
@@ -137,14 +149,16 @@
     if (!product) return;
     activeProductId = productId;
 
+    // Set modal content
     document.getElementById('modal-title').textContent = product.title;
     const imgUrl = product.images && product.images[0] ? product.images[0].src : null;
     const imgEl = document.getElementById('modal-img');
     imgEl.src = imgUrl || '';
     imgEl.style.display = imgUrl ? 'block' : 'none';
 
+    // Reset state
     const descBox = document.getElementById('desc-box');
-    descBox.className = 'desc-box generating-msg';
+    descBox.className = 'desc-box generating';
     descBox.textContent = 'Generating description... please wait';
 
     const saveBtn = document.getElementById('btn-save');
@@ -154,6 +168,7 @@
 
     document.getElementById('overlay').classList.add('open');
 
+    // Call API
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -161,8 +176,9 @@
         body: JSON.stringify({ title: product.title, imageUrl: imgUrl })
       });
       const data = await res.json();
+
       if (data.error) {
-        descBox.className = 'desc-box error-msg';
+        descBox.className = 'desc-box error';
         descBox.textContent = 'Error: ' + data.error;
       } else {
         descBox.className = 'desc-box';
@@ -170,8 +186,8 @@
         saveBtn.disabled = false;
       }
     } catch (e) {
-      descBox.className = 'desc-box error-msg';
-      descBox.textContent = 'Network error. Try again.';
+      descBox.className = 'desc-box error';
+      descBox.textContent = 'Network error. Close and try again.';
     }
   }
 
@@ -179,7 +195,7 @@
     if (!activeProductId) return;
     const descBox = document.getElementById('desc-box');
     const description = descBox.textContent;
-    if (!description || descBox.classList.contains('generating-msg') || descBox.classList.contains('error-msg')) return;
+    if (!description || descBox.classList.contains('generating') || descBox.classList.contains('error')) return;
 
     const saveBtn = document.getElementById('btn-save');
     saveBtn.textContent = 'Saving...';
@@ -192,6 +208,7 @@
         body: JSON.stringify({ productId: activeProductId, description })
       });
       const data = await res.json();
+
       if (data.success) {
         saveBtn.textContent = '✓ Saved!';
         saveBtn.className = 'btn-save success';
@@ -212,6 +229,7 @@
     document.getElementById('overlay').classList.remove('open');
     activeProductId = null;
     document.getElementById('desc-box').textContent = '';
+    document.getElementById('desc-box').className = 'desc-box generating';
     document.getElementById('modal-img').src = '';
   }
 
