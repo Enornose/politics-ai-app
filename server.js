@@ -17,27 +17,29 @@ const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
 const APP_URL = 'https://politics-ai-app-production.up.railway.app';
 const TOKEN_FILE = '/tmp/shopify_token.txt';
 
-let accessToken = process.env.SHOPIFY_TOKEN || null;
-if (!accessToken && fs.existsSync(TOKEN_FILE)) {
-  accessToken = fs.readFileSync(TOKEN_FILE, 'utf8').trim();
-  console.log('Loaded token from disk:', accessToken ? 'YES' : 'NO');
-}
+let accessToken = null;
 
-function saveToken(token) {
-  accessToken = token;
-  try { fs.writeFileSync(TOKEN_FILE, token); } catch(e) { console.error('Could not save token:', e.message); }
-}
+// Clear route - resets everything
+app.get('/clear', (req, res) => {
+  accessToken = null;
+  try { fs.unlinkSync(TOKEN_FILE); } catch(e) {}
+  res.send('Token cleared. <a href="/auth">Click here to re-authorize</a>');
+});
 
 app.get('/auth', (req, res) => {
+  accessToken = null;
+  try { fs.unlinkSync(TOKEN_FILE); } catch(e) {}
   const state = crypto.randomBytes(16).toString('hex');
   const redirectUri = APP_URL + '/auth/callback';
   const scopes = 'read_products,write_products';
-  const authUrl = 'https://' + SHOPIFY_STORE + '/admin/oauth/authorize?client_id=' + SHOPIFY_CLIENT_ID + '&scope=' + scopes + '&redirect_uri=' + redirectUri + '&state=' + state;
+  const authUrl = 'https://' + SHOPIFY_STORE + '/admin/oauth/authorize?client_id=' + SHOPIFY_CLIENT_ID + '&scope=' + scopes + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&state=' + state;
+  console.log('Redirecting to Shopify auth:', authUrl);
   res.redirect(authUrl);
 });
 
 app.get('/auth/callback', async (req, res) => {
   const code = req.query.code;
+  console.log('Got callback with code:', code ? 'YES' : 'NO');
   try {
     const response = await fetch('https://' + SHOPIFY_STORE + '/admin/oauth/access_token', {
       method: 'POST',
@@ -45,9 +47,13 @@ app.get('/auth/callback', async (req, res) => {
       body: JSON.stringify({ client_id: SHOPIFY_CLIENT_ID, client_secret: SHOPIFY_CLIENT_SECRET, code: code })
     });
     const data = await response.json();
+    console.log('Token exchange response:', JSON.stringify(data));
     if (data.access_token) {
-      saveToken(data.access_token);
-      console.log('Token saved to disk');
+      accessToken = data.access_token;
+      fs.writeFileSync(TOKEN_FILE, accessToken);
+      console.log('Token saved successfully');
+    } else {
+      return res.status(500).send('Failed to get token: ' + JSON.stringify(data));
     }
     res.redirect('/');
   } catch (err) {
@@ -71,7 +77,9 @@ app.get('/api/products', async (req, res) => {
       headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' }
     });
     const data = await response.json();
+    console.log('Shopify response status:', response.status);
     if (data.errors) {
+      console.log('Shopify error:', data.errors);
       accessToken = null;
       try { fs.unlinkSync(TOKEN_FILE); } catch(e) {}
       return res.status(401).json({ error: 'Token expired' });
@@ -116,13 +124,11 @@ app.post('/api/generate', async (req, res) => {
     });
 
     const data = await anthropicRes.json();
-    console.log('Anthropic status:', anthropicRes.status);
     if (!data.content || !data.content[0]) {
       return res.status(500).json({ error: JSON.stringify(data) });
     }
     res.json({ description: data.content[0].text });
   } catch (err) {
-    console.error('Generate error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -147,11 +153,9 @@ app.post('/api/save', async (req, res) => {
       headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' },
       body: JSON.stringify({ product: { id: productId, body_html: html } })
     });
-    const data = await response.json();
     console.log('Save status:', response.status);
     res.json({ success: true });
   } catch (err) {
-    console.error('Save error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
